@@ -134,57 +134,55 @@ boolean incomingModeIsAnalog;
 boolean incomingOperationIsOutput;
 
 void loop() {
- // send data only when you receive data:
- if (Serial.available() > 0) {
-   // read the incoming byte:
-   incomingByte = Serial.read();
+  if (Serial.available() > 0) {
+    incomingByte = Serial.read();
 
-   switch (expect) {
-     case 1: // expect command char, such as 'A' or 'D'
-       expect = 0;
-       if ((incomingByte == 'A') || (incomingByte == 'D') || (incomingByte == 'P')) {
-         incomingModeIsAnalog = (incomingByte == 'A');
-         incomingOperationIsOutput = (incomingByte != 'P');
-         expect = 2;
-       } else if (incomingByte == 'R') {
-         resetPinsToDefaults();
-       } else if (incomingByte == 'L') {
-         listPins();
-       }
-       break;
-     case 2: // expect pin number
-       if ((incomingByte >= '0') && (incomingByte <= '9')) {
-         incomingPin = incomingPin * 10 + (incomingByte - '0');
-       } else if (incomingOperationIsOutput && (incomingByte == ':')) {
-         expect = 3;
-       } else if ((!incomingOperationIsOutput) && (incomingByte == ';')) {
-         expect = 0;
-         requestReadFromPin(incomingPin);
-       } else {
-         expect = 0;
-       }
-       break;
-     case 3: // expect value to write
-       if ((incomingByte >= '0') && (incomingByte <= '9')) {
-         incomingValue = incomingValue * 10 + (incomingByte - '0');
-       } else if (incomingByte == ';') {
-         expect = 0;
-         if (incomingModeIsAnalog) {
-           requestWriteToAnalogPin(incomingPin, incomingValue);
-         } else {
-           requestWriteToDigitalPin(incomingPin, incomingValue);
-         }
-       } else {
-         expect = 0;
-       }
-       break;
-     default:
-       if (incomingByte == '@') {
-         expect = 1;
-         incomingPin = 0;
-         incomingValue = 0;
-       }
-   }
- }
+    if (incomingByte == '@') {
+      expect = 1;
+      incomingPin = 0;
+      incomingValue = 0;
+    } else switch (expect) {
+      case 1: // expect command char, such as 'A' or 'D'
+        expect = 0;
+        if ((incomingByte == 'A') || (incomingByte == 'D') || (incomingByte == 'P')) {
+          incomingModeIsAnalog = (incomingByte == 'A');
+          incomingOperationIsOutput = (incomingByte != 'P');
+          expect = 2;
+        } else if (incomingByte == 'R') {
+          resetPinsToDefaults();
+        } else if (incomingByte == 'L') {
+          listPins();
+        }
+        break;
+      case 2: // expect pin number
+        if ((incomingByte >= '0') && (incomingByte <= '9')) {
+          incomingPin = incomingPin * 10 + (incomingByte - '0');
+        } else if (incomingOperationIsOutput && (incomingByte == ':')) {
+          expect = 3;
+        } else if ((!incomingOperationIsOutput) && (incomingByte == ';')) {
+          expect = 0;
+          requestReadFromPin(incomingPin);
+        } else {
+          expect = 0;
+        }
+        break;
+      case 3: // expect value to write
+        if ((incomingByte >= '0') && (incomingByte <= '9')) {
+          incomingValue = incomingValue * 10 + (incomingByte - '0');
+        } else if (incomingByte == ';') {
+          expect = 0;
+          if (incomingModeIsAnalog) {
+            requestWriteToAnalogPin(incomingPin, incomingValue);
+          } else {
+            requestWriteToDigitalPin(incomingPin, incomingValue);
+          }
+        } else {
+          expect = 0;
+        }
+        break;
+      default:
+        break;
+    }
+  }
 }
 
