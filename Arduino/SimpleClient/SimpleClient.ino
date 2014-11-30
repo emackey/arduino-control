@@ -1,15 +1,48 @@
-// First simple ArduinoControl client
+// First simple ArduinoControl client, by Ed Mackey, 30 Nov 2014.
 
-int analogOuts[] = { 5, 10, 9, 11, 13, 6 };
-int digitalOuts[] = { 7, 2, 1, 3, 12, 4 };
+struct pin {
+  int number;
+  String name;
+};
 
-int numAnalogOuts = sizeof(analogOuts) / sizeof(int);
-int numDigitalOuts = sizeof(digitalOuts) / sizeof(int);
+// List of "analog" PWM output pins, with names.  Names should be
+// escaped such that an extra backslash '\' is placed in front of
+// any '\', '@', or double-quotes in the string.  This escaping
+// must be in addition to the compiler's own escaping, so a single
+// backslash becomes four here.  Better to avoid special chars.
+pin analogOuts[] = {
+  {  5, "Output A"},
+  { 10, "Output B"},
+  {  9, "Output C"},
+  { 11, "Output D"},
+  { 13, "Output E"},
+  {  6, "Output F"}
+};
+
+// List of digital (boolean) outputs with names, escaped as above.
+pin digitalOuts[] = {
+  {  7, "Green 1"},
+  {  2, "Green 2"},
+  {  1, "Green 3"},
+  {  3, "Green 4"},
+  { 12, "Green 5"},
+  {  4, "Green 6"}
+};
+
+int numAnalogOuts = sizeof(analogOuts) / sizeof(pin);
+int numDigitalOuts = sizeof(digitalOuts) / sizeof(pin);
 
 void resetPinsToDefaults() {
-  for (int i = 0; i < numDigitalOuts; ++i) {
-    pinMode(digitalOuts[i], OUTPUT);
-    digitalWrite(digitalOuts[i], HIGH);
+  int i, pin;
+  for (i = 0; i < numAnalogOuts; ++i) {
+    pin = analogOuts[i].number;
+    pinMode(pin, OUTPUT);
+    analogWrite(pin, 255);
+  }
+  for (i = 0; i < numDigitalOuts; ++i) {
+    pin = digitalOuts[i].number;
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
   }
 }
 
@@ -24,18 +57,32 @@ void setup() {
 }
 
 void listPins() {
-  Serial.println("TODO: list of pins");
+  Serial.print("@LIST");
+  for (int i = 0; i < numAnalogOuts; ++i) {
+    Serial.print("|AO");
+    Serial.print(analogOuts[i].number, DEC);
+    Serial.print("\"");
+    Serial.print(analogOuts[i].name);
+    Serial.print("\"");
+  }
+  for (int i = 0; i < numDigitalOuts; ++i) {
+    Serial.print("|DO");
+    Serial.print(digitalOuts[i].number, DEC);
+    Serial.print("\"");
+    Serial.print(digitalOuts[i].name);
+    Serial.print("\"");
+  }
+  Serial.println(";");
 }
 
 void requestReadFromPin(int pin) {
-  Serial.print("TODO: Read from pin ");
-  Serial.println(pin, DEC);
+  Serial.println("@ERROR: Not implemented yet;");
 }
 
 void requestWriteToAnalogPin(int pin, int value) {
   boolean allowed = false;
   for (int i = 0; i < numAnalogOuts; ++i) {
-    if (pin == analogOuts[i]) {
+    if (pin == analogOuts[i].number) {
       allowed = true;
       break;
     }
@@ -56,7 +103,7 @@ void requestWriteToAnalogPin(int pin, int value) {
 void requestWriteToDigitalPin(int pin, int value) {
   boolean allowed = false;
   for (int i = 0; i < numDigitalOuts; ++i) {
-    if (pin == digitalOuts[i]) {
+    if (pin == digitalOuts[i].number) {
       allowed = true;
       break;
     }
