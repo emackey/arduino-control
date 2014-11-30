@@ -6,7 +6,9 @@
 @Dppp:n; - Digital write pin ppp value n, where n is 0 or 1.
            Arduino will respond with @OK; or @NO; depending if this is a valid write.
 
-@Rppp; - Read from pin ppp.  Arduino will respond with one of the above two commands.
+@Pppp; - Read from pin ppp.  Arduino will respond with one of the above two commands.
+
+@RESET; - Reset pins to default startup values.
 
 @LIST; - Request a list of available pins and their assigned names and types.  See below.
 
@@ -31,3 +33,9 @@ Let's say we have a board with three analog outs on pins 3, 5, and 6.  The Ardui
 to the @LIST; command might look like this:
 
 @LIST|AO3"Red LED"|AO5"Green LED"|AO6"Blue LED";
+
+## Additional responses
+
+@OK; - Write operation succeded
+
+@ERROR: <message>; - Operation failed.
