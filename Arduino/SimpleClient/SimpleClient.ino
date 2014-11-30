@@ -1,7 +1,9 @@
 // First simple ArduinoControl client
 
-int digitalOuts[] = { 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13 };
+int analogOuts[] = { 5, 10, 9, 11, 13, 6 };
+int digitalOuts[] = { 7, 2, 1, 3, 12, 4 };
 
+int numAnalogOuts = sizeof(analogOuts) / sizeof(int);
 int numDigitalOuts = sizeof(digitalOuts) / sizeof(int);
 
 void resetPinsToDefaults() {
@@ -31,10 +33,24 @@ void requestReadFromPin(int pin) {
 }
 
 void requestWriteToAnalogPin(int pin, int value) {
-  Serial.print("TODO: Write to analog pin ");
-  Serial.print(pin, DEC);
-  Serial.print(" value ");
-  Serial.println(value, DEC);
+  boolean allowed = false;
+  for (int i = 0; i < numAnalogOuts; ++i) {
+    if (pin == analogOuts[i]) {
+      allowed = true;
+      break;
+    }
+  }
+
+  if (!allowed) {
+    Serial.print("@ERROR: No such analog pin ");
+    Serial.print(pin, DEC);
+    Serial.println(";");
+  } else if ((value < 0) || (value > 255)) {
+    Serial.println("@ERROR: Analog value must be between 0 and 255, inclusive;");
+  } else {
+    analogWrite(pin, value);
+    Serial.println("@OK;");
+  }
 }
 
 void requestWriteToDigitalPin(int pin, int value) {
