@@ -1,10 +1,10 @@
 # Serial protocol for Arduino Control
 
 `@Appp:nnn;` - Analog write pin ppp value nnn, where nnn is between 0 and 255, inclusive.
-               Arduino will respond with @OK; or @NO; depending if this is a valid write.
+               Arduino will respond with `@OK;` or `@ERROR...;` depending if this is a valid write.
 
 `@Dppp:n;` - Digital write pin ppp value n, where n is 0 or 1.
-             Arduino will respond with @OK; or @NO; depending if this is a valid write.
+             Arduino will respond with `@OK;` or `@ERROR...;` depending if this is a valid write.
 
 `@Pppp;` - Read from pin ppp.  Arduino will respond with one of the above two commands.
 
