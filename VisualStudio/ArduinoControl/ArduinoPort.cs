@@ -62,6 +62,8 @@ namespace ArduinoControl
             object sender,
             SerialDataReceivedEventArgs e)
         {
+            // TODO: This event is fired on a subthread, need to get the
+            //       data handed off to the main thread.
             ArduinoPort port = (ArduinoPort)sender;
             string data = port.ReadExisting();
             port.OnDataReceived(data);
