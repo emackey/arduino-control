@@ -19,6 +19,8 @@ namespace ArduinoControlPanel
         private bool m_isUpdatingAvailability;
         private ArduinoPort m_port;
 
+        private delegate void ArduinoPinsDelegate();
+
         public Form1()
         {
             m_isUpdatingAvailability = false;
@@ -41,13 +43,38 @@ namespace ArduinoControlPanel
                 {
                     return;
                 }
-                m_port.Dispose();
-                m_port = null;
+                ReleasePort();
             }
 
             if (!portName.Equals(NO_CONNECT))
             {
                 m_port = new ArduinoPort(portName, 9600);
+                m_port.ArduinoPinsAvailable += OnArduinoPinsAvailable;
+            }
+        }
+
+        private void OnArduinoPinsAvailable(object sender, EventArgs e)
+        {
+            // NOTE: For now, this event happens on a subthread, so we must BeginInvoke.
+            BeginInvoke(new ArduinoPinsDelegate(OnMainThreadArduinoPinsAvailable));
+        }
+
+        private void OnMainThreadArduinoPinsAvailable()
+        {
+            int index = 0;
+            foreach (var pin in m_port.ArduinoPins)
+            {
+                if (pin.Mode == ArduinoPinMode.AnalogOut)
+                {
+                    var control = new AnalogControl(pin);
+                    int width = control.Size.Width;
+                    control.Location = new Point(index * width + 10, 0);
+                    control.TabIndex = index + 100;
+                    control.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Bottom;
+                    control.Size = new Size(width, panelForControls.Size.Height - 5);
+                    panelForControls.Controls.Add(control);
+                    ++index;
+                }
             }
         }
 
@@ -95,13 +122,20 @@ namespace ArduinoControlPanel
             UpdateSerialAvailability();
         }
 
+        private void ReleasePort()
+        {
+            m_port.ArduinoPinsAvailable -= OnArduinoPinsAvailable;
+            panelForControls.Controls.Clear();
+            m_port.Dispose();
+            m_port = null;
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             timerSerialAvailability.Stop();
             if (m_port != null)
             {
-                m_port.Dispose();
-                m_port = null;
+                ReleasePort();
             }
         }
     }

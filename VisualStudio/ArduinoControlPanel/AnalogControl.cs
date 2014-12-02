@@ -19,6 +19,9 @@ namespace ArduinoControlPanel
         {
             Pin = pin;
             InitializeComponent();
+            groupBoxAnalog.Text = pin.Name;
+            trackBarAnalog.Value = pin.Value;
+            textBoxAnalog.Text = pin.Value.ToString();
         }
 
         private void trackBarAnalog_Scroll(object sender, EventArgs e)
@@ -36,7 +39,7 @@ namespace ArduinoControlPanel
             int value;
             if (int.TryParse(textBoxAnalog.Text, out value))
             {
-                if (Pin.Value != value)
+                if ((Pin.Value != value) && (value >= 0) && (value <= 255))
                 {
                     Pin.Value = value;
                     trackBarAnalog.Value = value;

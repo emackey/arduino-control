@@ -40,10 +40,11 @@
             this.panelForControls.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelForControls.AutoScroll = true;
             this.panelForControls.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panelForControls.Location = new System.Drawing.Point(12, 41);
             this.panelForControls.Name = "panelForControls";
-            this.panelForControls.Size = new System.Drawing.Size(531, 209);
+            this.panelForControls.Size = new System.Drawing.Size(636, 239);
             this.panelForControls.TabIndex = 0;
             // 
             // labelCOM
@@ -74,7 +75,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(555, 262);
+            this.ClientSize = new System.Drawing.Size(660, 292);
             this.Controls.Add(this.comboBoxCOM);
             this.Controls.Add(this.labelCOM);
             this.Controls.Add(this.panelForControls);

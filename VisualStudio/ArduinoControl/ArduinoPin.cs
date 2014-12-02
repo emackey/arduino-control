@@ -82,7 +82,7 @@ namespace ArduinoControl
                         {
                             throw new Exception("Analog values must be between 0 and 255, inclusive.");
                         }
-                        m_port.Write("A" + Number + ":" + value + ";");
+                        m_port.Write("@A" + Number + ":" + value + ";");
                         break;
 
                     case ArduinoPinMode.DigitalIn:
@@ -93,7 +93,7 @@ namespace ArduinoControl
                         {
                             throw new Exception("Digital values must be 0 or 1.");
                         }
-                        m_port.Write("D" + Number + ":" + value + ";");
+                        m_port.Write("@D" + Number + ":" + value + ";");
                         break;
                 }
                 m_value = value;

@@ -64,6 +64,7 @@
             this.trackBarAnalog.Orientation = System.Windows.Forms.Orientation.Vertical;
             this.trackBarAnalog.Size = new System.Drawing.Size(45, 205);
             this.trackBarAnalog.TabIndex = 0;
+            this.trackBarAnalog.TickFrequency = 16;
             this.trackBarAnalog.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
             this.trackBarAnalog.Scroll += new System.EventHandler(this.trackBarAnalog_Scroll);
             // 

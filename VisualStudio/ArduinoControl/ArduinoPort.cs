@@ -9,15 +9,15 @@ namespace ArduinoControl
 {
     public class ArduinoPort : SerialPort
     {
-        private List<ArduinoPin> m_pins;
-        private string m_receivedBytes;
+        public List<ArduinoPin> ArduinoPins { get; private set; }
+        public event EventHandler ArduinoPinsAvailable;
 
-        public event EventHandler PinsAvailable;
+        private string m_receivedBytes;
 
         public ArduinoPort(string portName, int baudRate)
             : base(portName, baudRate)
         {
-            m_pins = new List<ArduinoPin>();
+            ArduinoPins = new List<ArduinoPin>();
             m_receivedBytes = String.Empty;
 
             DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
@@ -29,11 +29,11 @@ namespace ArduinoControl
 
         protected override void Dispose(bool disposing)
         {
-            foreach (var pin in m_pins)
+            foreach (var pin in ArduinoPins)
             {
                 pin.Disconnect();
             }
-            m_pins.Clear();
+            ArduinoPins.Clear();
             base.Dispose(disposing);
         }
 
@@ -77,16 +77,16 @@ namespace ArduinoControl
             for (int i = 1; i < numStrings; ++i)
             {
                 string pinDescription = pinList[i];
-                m_pins.Add(new ArduinoPin(this, pinDescription));
+                ArduinoPins.Add(new ArduinoPin(this, pinDescription));
             }
-            OnPinsAvailable(EventArgs.Empty);
+            OnArduinoPinsAvailable(EventArgs.Empty);
         }
 
-        protected virtual void OnPinsAvailable(EventArgs e)
+        protected virtual void OnArduinoPinsAvailable(EventArgs e)
         {
-            if (PinsAvailable != null)
+            if (ArduinoPinsAvailable != null)
             {
-                PinsAvailable(this, e);
+                ArduinoPinsAvailable(this, e);
             }
         }
     }
