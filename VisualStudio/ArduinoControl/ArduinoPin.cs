@@ -48,7 +48,7 @@ namespace ArduinoControl
             }
 
             int pos = pinDescription.IndexOf('"');
-            if (pos < 2)
+            if (pos < 3)
             {
                 throw new Exception("Missing pin name or number");
             }
@@ -56,7 +56,7 @@ namespace ArduinoControl
             Number = int.Parse(pinDescription.Substring(2, pos - 2));
 
             int pos2 = pinDescription.LastIndexOf('"');
-            Name = pinDescription.Substring(pos + 1, pos2 - pos);
+            Name = pinDescription.Substring(pos + 1, pos2 - pos - 1);
         }
 
         public void Disconnect()

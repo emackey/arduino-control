@@ -23,6 +23,7 @@ namespace ArduinoControl
             DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
 
             Open();
+            DtrEnable = true;
             Write("@LIST;");
         }
 
