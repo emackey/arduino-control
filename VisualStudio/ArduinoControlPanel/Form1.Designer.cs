@@ -79,7 +79,7 @@
             this.Controls.Add(this.labelCOM);
             this.Controls.Add(this.panelForControls);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Arduino Control Panel";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
