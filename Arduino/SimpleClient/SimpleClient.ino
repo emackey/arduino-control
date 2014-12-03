@@ -32,9 +32,20 @@ pin digitalOuts[] = {
   {  4, 1, 1, "Green 6"}
 };
 
+// List of analog inputs.  Default values are ignored.
+pin analogIns[] = {
+  { A0, 0, 0, "Input 1"},
+  { A1, 0, 0, "Input 2"},
+  { A2, 0, 0, "Input 3"},
+  { A3, 0, 0, "Input 4"},
+  { A4, 0, 0, "Input 5"},
+  { A5, 0, 0, "Input 6"}
+};
+
 // This calculates the number of pins.
 int numAnalogOuts = sizeof(analogOuts) / sizeof(pin);
 int numDigitalOuts = sizeof(digitalOuts) / sizeof(pin);
+int numAnalogIns = sizeof(analogIns) / sizeof(pin);
 
 void resetPinsToDefaults() {
   int i, pin;
@@ -50,6 +61,10 @@ void resetPinsToDefaults() {
     digitalOuts[i].value = digitalOuts[i].defaultValue;
     digitalWrite(pin, digitalOuts[i].value);
   }
+  for (i = 0; i < numAnalogIns; ++i) {
+    pin = analogIns[i].number;
+    pinMode(pin, INPUT);
+  }
 }
 
 void setup() {
@@ -64,7 +79,8 @@ void setup() {
 
 void listPins() {
   Serial.print("@LIST");
-  for (int i = 0; i < numAnalogOuts; ++i) {
+  int i;
+  for (i = 0; i < numAnalogOuts; ++i) {
     Serial.print("|AO");
     Serial.print(analogOuts[i].number, DEC);
     Serial.print(":");
@@ -73,7 +89,7 @@ void listPins() {
     Serial.print(analogOuts[i].name);
     Serial.print("\"");
   }
-  for (int i = 0; i < numDigitalOuts; ++i) {
+  for (i = 0; i < numDigitalOuts; ++i) {
     Serial.print("|DO");
     Serial.print(digitalOuts[i].number, DEC);
     Serial.print(":");
@@ -82,11 +98,51 @@ void listPins() {
     Serial.print(digitalOuts[i].name);
     Serial.print("\"");
   }
+  for (i = 0; i < numAnalogIns; ++i) {
+    Serial.print("|AI");
+    Serial.print(analogIns[i].number, DEC);
+    Serial.print(":");
+    Serial.print(analogRead(analogIns[i].number), DEC);
+    Serial.print("\"");
+    Serial.print(analogIns[i].name);
+    Serial.print("\"");
+  }
+  Serial.println(";");
+}
+
+void pollPins() {
+  Serial.print("@POLL");
+  int i;
+  for (i = 0; i < numAnalogIns; ++i) {
+    Serial.print("|A");
+    Serial.print(analogIns[i].number, DEC);
+    Serial.print(":");
+    Serial.print(analogRead(analogIns[i].number), DEC);
+  }
   Serial.println(";");
 }
 
 void requestReadFromPin(int pin) {
-  Serial.println("@ERROR: Not implemented yet;");
+  boolean allowed = false;
+  int i;
+  for (i = 0; i < numAnalogIns; ++i) {
+    if (pin == analogIns[i].number) {
+      allowed = true;
+      break;
+    }
+  }
+
+  if (!allowed) {
+    Serial.print("@ERROR: No such analog input pin ");
+    Serial.print(pin, DEC);
+    Serial.println(";");
+  } else {
+    Serial.print("@A");
+    Serial.print(pin, DEC);
+    Serial.print(":");
+    Serial.print(analogRead(pin), DEC);
+    Serial.println(";");
+  }
 }
 
 void requestWriteToAnalogPin(int pin, int value) {
@@ -100,7 +156,7 @@ void requestWriteToAnalogPin(int pin, int value) {
   }
 
   if (!allowed) {
-    Serial.print("@ERROR: No such analog pin ");
+    Serial.print("@ERROR: No such analog output pin ");
     Serial.print(pin, DEC);
     Serial.println(";");
   } else if ((value < 0) || (value > 255)) {
@@ -123,7 +179,7 @@ void requestWriteToDigitalPin(int pin, int value) {
   }
 
   if (!allowed) {
-    Serial.print("@ERROR: No such digital pin ");
+    Serial.print("@ERROR: No such digital output pin ");
     Serial.print(pin, DEC);
     Serial.println(";");
   } else if ((value < 0) || (value > 1)) {
@@ -158,15 +214,17 @@ void loop() {
     } else switch (expect) {
       case 1: // expect command char, such as 'A' or 'D'
         expect = 0;
-        if ((incomingByte == 'A') || (incomingByte == 'D') || (incomingByte == 'P')) {
+        if ((incomingByte == 'A') || (incomingByte == 'D') || (incomingByte == 'I')) {
           incomingModeIsAnalog = (incomingByte == 'A');
-          incomingOperationIsOutput = (incomingByte != 'P');
+          incomingOperationIsOutput = (incomingByte != 'I');
           expect = 2;
         } else if (incomingByte == 'R') {
           resetPinsToDefaults();
           Serial.println("@RESET;");
         } else if (incomingByte == 'L') {
           listPins();
+        } else if (incomingByte == 'P') {
+          pollPins();
         }
         break;
       case 2: // expect pin number

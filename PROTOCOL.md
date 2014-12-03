@@ -6,11 +6,13 @@
 `@Dppp:n;` - Digital write pin ppp value n, where n is 0 or 1.
              Arduino will respond with `@OK;` or `@ERROR...;` depending if this is a valid write.
 
-`@Pppp;` - Read from pin ppp.  Arduino will respond with one of the above two commands.
+`@Ippp;` - Read from input pin ppp.  Arduino will respond with one of the above two commands.
 
 `@RESET;` - Reset pins to default startup values.
 
-`@LIST;` - Request a list of available pins and their assigned names and types.  See below.
+`@LIST;` - Request a list of available pins and their assigned names, values, and types.  See below.
+
+`@POLL;` - A shorter version of `@LIST;` that returns only input pins, minus the names.
 
 ## List response
 
@@ -30,11 +32,24 @@ A pin descriptor is as follows:
 
 ## Example list
 
-Let's say we have a board with three analog outs on pins 3, 5, and 6.  The Arduino's response
-to the `@LIST;` command might look like this:
+Let's say we have a board with three analog outs on pins 3, 5, and 6, and two analog input
+pins (one grounded and one high).  The Arduino's response to the `@LIST;` command might
+look like this:
 
 ```
-@LIST|AO3:255"Red LED"|AO5:255"Green LED"|AO6:0"Blue LED";
+@LIST|AO3:255"Red LED"|AO5:255"Green LED"|AO6:0"Blue LED"|AI18:0"Input 1"|AI19:1023"Input 2";
+```
+
+## Poll response
+
+This is similar to the `@LIST;` response, but returns only pins set to "input" mode, and does
+not include names or the I/O indicator.  It is meant for continual polling of the assigned
+input pins, at a rate established by the host PC.
+
+Here's what `@POLL;` would respond to the same situation that produced the list example above:
+
+```
+@POLL|A18:0|A19:1023;
 ```
 
 ## Additional responses
