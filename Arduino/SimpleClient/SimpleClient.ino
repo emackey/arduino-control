@@ -1,8 +1,10 @@
 // First simple ArduinoControl client, by Ed Mackey, 30 Nov 2014.
 
 struct pin {
-  int number;
-  String name;
+  int number;        // The Arduino pin number.  You can use "A0" etc for analog inputs.
+  int defaultValue;  // For output pins, the initial value at startup and after the @RESET; command.
+  int value;         // The current value (will be overwritten at startup).
+  String name;       // The human-readable name of what hardware this pin controls.
 };
 
 // List of "analog" PWM output pins, with names.  Names should be
@@ -11,24 +13,26 @@ struct pin {
 // must be in addition to the compiler's own escaping, so a single
 // backslash becomes four here.  Better to avoid special chars.
 pin analogOuts[] = {
-  {  5, "Output A"},
-  { 10, "Output B"},
-  {  9, "Output C"},
-  { 11, "Output D"},
-  { 13, "Output E"},
-  {  6, "Output F"}
+  {  5, 255, 255, "Output A"},
+  { 10, 255, 255, "Output B"},
+  {  9, 255, 255, "Output C"},
+  { 11, 255, 255, "Output D"},
+  { 13, 255, 255, "Output E"},
+  {  6, 255, 255, "Output F"}
 };
 
 // List of digital (boolean) outputs with names, escaped as above.
+// Default values must be 0 or 1 only.
 pin digitalOuts[] = {
-  {  7, "Green 1"},
-  {  2, "Green 2"},
-  {  1, "Green 3"},
-  {  3, "Green 4"},
-  { 12, "Green 5"},
-  {  4, "Green 6"}
+  {  7, 1, 1, "Green 1"},
+  {  2, 1, 1, "Green 2"},
+  {  1, 1, 1, "Green 3"},
+  {  3, 1, 1, "Green 4"},
+  { 12, 1, 1, "Green 5"},
+  {  4, 1, 1, "Green 6"}
 };
 
+// This calculates the number of pins.
 int numAnalogOuts = sizeof(analogOuts) / sizeof(pin);
 int numDigitalOuts = sizeof(digitalOuts) / sizeof(pin);
 
@@ -37,12 +41,14 @@ void resetPinsToDefaults() {
   for (i = 0; i < numAnalogOuts; ++i) {
     pin = analogOuts[i].number;
     pinMode(pin, OUTPUT);
-    analogWrite(pin, 255);
+    analogOuts[i].value = analogOuts[i].defaultValue;
+    analogWrite(pin, analogOuts[i].value);
   }
   for (i = 0; i < numDigitalOuts; ++i) {
     pin = digitalOuts[i].number;
     pinMode(pin, OUTPUT);
-    digitalWrite(pin, HIGH);
+    digitalOuts[i].value = digitalOuts[i].defaultValue;
+    digitalWrite(pin, digitalOuts[i].value);
   }
 }
 
@@ -61,6 +67,8 @@ void listPins() {
   for (int i = 0; i < numAnalogOuts; ++i) {
     Serial.print("|AO");
     Serial.print(analogOuts[i].number, DEC);
+    Serial.print(":");
+    Serial.print(analogOuts[i].value, DEC);
     Serial.print("\"");
     Serial.print(analogOuts[i].name);
     Serial.print("\"");
@@ -68,6 +76,8 @@ void listPins() {
   for (int i = 0; i < numDigitalOuts; ++i) {
     Serial.print("|DO");
     Serial.print(digitalOuts[i].number, DEC);
+    Serial.print(":");
+    Serial.print(digitalOuts[i].value, DEC);
     Serial.print("\"");
     Serial.print(digitalOuts[i].name);
     Serial.print("\"");
@@ -81,7 +91,8 @@ void requestReadFromPin(int pin) {
 
 void requestWriteToAnalogPin(int pin, int value) {
   boolean allowed = false;
-  for (int i = 0; i < numAnalogOuts; ++i) {
+  int i;
+  for (i = 0; i < numAnalogOuts; ++i) {
     if (pin == analogOuts[i].number) {
       allowed = true;
       break;
@@ -96,13 +107,15 @@ void requestWriteToAnalogPin(int pin, int value) {
     Serial.println("@ERROR: Analog value must be between 0 and 255, inclusive;");
   } else {
     analogWrite(pin, value);
+    analogOuts[i].value = value;
     Serial.println("@OK;");
   }
 }
 
 void requestWriteToDigitalPin(int pin, int value) {
   boolean allowed = false;
-  for (int i = 0; i < numDigitalOuts; ++i) {
+  int i;
+  for (i = 0; i < numDigitalOuts; ++i) {
     if (pin == digitalOuts[i].number) {
       allowed = true;
       break;
@@ -117,6 +130,7 @@ void requestWriteToDigitalPin(int pin, int value) {
     Serial.println("@ERROR: Digital value must be 0 or 1;");
   } else {
     digitalWrite(pin, (value > 0) ? HIGH : LOW);
+    digitalOuts[i].value = value;
     Serial.println("@OK;");
   }
 }
@@ -150,6 +164,7 @@ void loop() {
           expect = 2;
         } else if (incomingByte == 'R') {
           resetPinsToDefaults();
+          Serial.println("@RESET;");
         } else if (incomingByte == 'L') {
           listPins();
         }

@@ -22,6 +22,7 @@ A pin descriptor is as follows:
 * Second character is `A` or `D`, for Analog or Digital.
 * Third character is `I` or `O`, for Input (read from hardware) or Output (write to hardware).
 * One or more digit characters indicate the pin number in decimal.
+* A colon ':' followed by the current value of the pin.
 * A double-quote character indicates the start of the pin's human-readable name.
 * The backslash is used to escape backslashes, @'s, and double-quotes within the pin name.
 * The next un-escaped double-quote marks the end of the pin name and descriptor.
@@ -33,7 +34,7 @@ Let's say we have a board with three analog outs on pins 3, 5, and 6.  The Ardui
 to the `@LIST;` command might look like this:
 
 ```
-@LIST|AO3"Red LED"|AO5"Green LED"|AO6"Blue LED";
+@LIST|AO3:255"Red LED"|AO5:255"Green LED"|AO6:0"Blue LED";
 ```
 
 ## Additional responses

@@ -29,34 +29,37 @@ namespace ArduinoControl
             {
                 case "AI":
                     Mode = ArduinoPinMode.AnalogIn;
-                    m_value = 0;
                     break;
                 case "AO":
                     Mode = ArduinoPinMode.AnalogOut;
-                    m_value = 255;
                     break;
                 case "DI":
                     Mode = ArduinoPinMode.DigitalIn;
-                    m_value = 0;
                     break;
                 case "DO":
                     Mode = ArduinoPinMode.DigitalOut;
-                    m_value = 1;
                     break;
                 default:
                     throw new Exception("Unknown pin mode");
             }
 
-            int pos = pinDescription.IndexOf('"');
-            if (pos < 3)
+            int posColon = pinDescription.IndexOf(':');
+            if (posColon < 3)
             {
-                throw new Exception("Missing pin name or number");
+                throw new Exception("Missing pin value or number");
             }
 
-            Number = int.Parse(pinDescription.Substring(2, pos - 2));
+            int posQuote1 = pinDescription.IndexOf('"');
+            if (posQuote1 < (posColon + 2))
+            {
+                throw new Exception("Missing pin name or value");
+            }
 
-            int pos2 = pinDescription.LastIndexOf('"');
-            Name = pinDescription.Substring(pos + 1, pos2 - pos - 1);
+            Number = int.Parse(pinDescription.Substring(2, posColon - 2));
+            m_value = int.Parse(pinDescription.Substring(posColon + 1, posQuote1 - posColon - 1));
+
+            int posQuote2 = pinDescription.LastIndexOf('"');
+            Name = pinDescription.Substring(posQuote1 + 1, posQuote2 - posQuote1 - 1);
         }
 
         public void Disconnect()
