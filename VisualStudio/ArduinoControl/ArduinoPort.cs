@@ -13,6 +13,7 @@ namespace ArduinoControl
         public event EventHandler ArduinoPinsAvailable;
 
         private string m_receivedBytes;
+        private bool m_queryOnReset;
 
         public ArduinoPort(string portName, int baudRate)
             : base(portName, baudRate)
@@ -24,7 +25,18 @@ namespace ArduinoControl
 
             Open();
             DtrEnable = true;
+#if LEONARDO
+            // Leonardo doesn't auto-reset every time some new PC process opens up the
+            // COM port, and it's possible to requery the Leo's running state from a
+            // newly launched PC app.
             Write("@LIST;");
+            m_queryOnReset = false;
+#else
+            // On the Uno, auto-reset happens anytime a PC app opens the COM port.
+            // We need to wait for the bootloader to finish and the sketch to begin,
+            // before sending any queries.
+            m_queryOnReset = true;
+#endif
         }
 
         protected override void Dispose(bool disposing)
@@ -54,6 +66,10 @@ namespace ArduinoControl
                     if (command[0] == 'L')
                     {
                         ParseList(command);
+                    }
+                    else if (command.Equals("RESET") && m_queryOnReset)
+                    {
+                        Write("@LIST;");
                     }
                 }
             }
