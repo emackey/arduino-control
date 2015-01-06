@@ -62,13 +62,13 @@
             this.comboBoxCOM.FormattingEnabled = true;
             this.comboBoxCOM.Location = new System.Drawing.Point(72, 9);
             this.comboBoxCOM.Name = "comboBoxCOM";
-            this.comboBoxCOM.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxCOM.Size = new System.Drawing.Size(266, 21);
             this.comboBoxCOM.TabIndex = 2;
             this.comboBoxCOM.SelectedIndexChanged += new System.EventHandler(this.comboBoxCOM_SelectedIndexChanged);
             // 
             // timerSerialAvailability
             // 
-            this.timerSerialAvailability.Interval = 500;
+            this.timerSerialAvailability.Interval = 1000;
             this.timerSerialAvailability.Tick += new System.EventHandler(this.timerSerialAvailability_Tick);
             // 
             // Form1

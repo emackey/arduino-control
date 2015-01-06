@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ArduinoControl;
+using System.Management;
 
 namespace ArduinoControlPanel
 {
@@ -26,7 +27,7 @@ namespace ArduinoControlPanel
             m_isUpdatingAvailability = false;
             InitializeComponent();
 
-            comboBoxCOM.Items.Add(NO_CONNECT);
+            comboBoxCOM.Items.Add(new PortDescription(NO_CONNECT));
             comboBoxCOM.SelectedIndex = 0;
             UpdateSerialAvailability();
 
@@ -35,7 +36,7 @@ namespace ArduinoControlPanel
 
         private void comboBoxCOM_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var portName = comboBoxCOM.SelectedItem.ToString();
+            var portName = ((PortDescription)comboBoxCOM.SelectedItem).Name;
 
             if (m_port != null)
             {
@@ -87,15 +88,40 @@ namespace ArduinoControlPanel
 
             m_isUpdatingAvailability = true;
             var availablePorts = SerialPort.GetPortNames().ToList();
+            var availableDescriptions = availablePorts.Select(p => new PortDescription(p)).ToList();
             var toRemove = new List<string>();
 
-            foreach (string portName in comboBoxCOM.Items)
+            try
             {
+                // https://social.msdn.microsoft.com/Forums/vstudio/en-US/331a26c1-0f42-4cf1-8adb-32fb09a18953/how-to-get-fullname-from-available-serial-port-com-port-from-device-manager-in-windows-form-with?forum=vbgeneral
+                var searcher = new ManagementObjectSearcher("root\\cimv2", "SELECT * FROM Win32_SerialPort");
+                var collection = searcher.Get();
+                foreach (var queryObject in collection)
+                {
+                    //var fullObject = queryObject.GetText(TextFormat.Mof);
+                    var portName = queryObject["DeviceID"].ToString();
+                    if (availablePorts.Contains(portName))
+                    {
+                        var availableDescription = availableDescriptions.First(p => p.Name.Equals(portName));
+                        availableDescription.Description = queryObject["Name"].ToString();
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            foreach (PortDescription portDescription in comboBoxCOM.Items)
+            {
+                var portName = portDescription.Name;
                 if (!portName.Equals(NO_CONNECT))
                 {
                     if (availablePorts.Contains(portName))
                     {
+                        var availableDescription = availableDescriptions.First(p => p.Name.Equals(portName));
+                        portDescription.Description = availableDescription.Description;
                         availablePorts.Remove(portName);
+                        availableDescriptions.Remove(availableDescription);
                     }
                     else
                     {
@@ -110,10 +136,22 @@ namespace ArduinoControlPanel
                 {
                     comboBoxCOM.SelectedIndex = 0;
                 }
-                comboBoxCOM.Items.Remove(portName);
+                PortDescription toRemovePort = null;
+                foreach (PortDescription portDescription in comboBoxCOM.Items)
+                {
+                    if (portDescription.Name.Equals(portName))
+                    {
+                        toRemovePort = portDescription;
+                        break;
+                    }
+                }
+                if (toRemove != null)
+                {
+                    comboBoxCOM.Items.Remove(toRemovePort);
+                }
             }
 
-            comboBoxCOM.Items.AddRange(availablePorts.ToArray());
+            comboBoxCOM.Items.AddRange(availableDescriptions.ToArray());
             m_isUpdatingAvailability = false;
         }
 
