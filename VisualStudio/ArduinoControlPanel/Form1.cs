@@ -19,13 +19,17 @@ namespace ArduinoControlPanel
 
         private bool m_isUpdatingAvailability;
         private ArduinoPort m_port;
+        private Dictionary<string, Dictionary<string, int>> m_savedPresets;
 
         private delegate void ArduinoPinsDelegate();
 
         public Form1()
         {
+            m_savedPresets = new Dictionary<string, Dictionary<string, int>>();
             m_isUpdatingAvailability = false;
             InitializeComponent();
+
+            comboBoxPresets.SelectedIndex = 0;
 
             comboBoxCOM.Items.Add(new PortDescription(NO_CONNECT));
             comboBoxCOM.SelectedIndex = 0;
@@ -67,7 +71,7 @@ namespace ArduinoControlPanel
             {
                 if (pin.Mode == ArduinoPinMode.AnalogOut)
                 {
-                    var control = new AnalogControl(pin);
+                    var control = new AnalogControl(pin, this);
                     int width = control.Size.Width;
                     control.Location = new Point(index * width + 10, 0);
                     control.TabIndex = index + 100;
@@ -174,6 +178,81 @@ namespace ArduinoControlPanel
             if (m_port != null)
             {
                 ReleasePort();
+            }
+        }
+
+        private void comboBoxPresets_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int index = comboBoxPresets.SelectedIndex;
+
+            if (index == 1)
+            {
+                var dialog = new NewPreset();
+                if ((dialog.ShowDialog() != DialogResult.OK) || (string.IsNullOrWhiteSpace(dialog.PresetName)))
+                {
+                    comboBoxPresets.SelectedIndex = 0;
+                }
+                else
+                {
+                    string name = dialog.PresetName;
+                    SavePreset(name);
+                    if (comboBoxPresets.Items.Contains(name))
+                    {
+                        comboBoxPresets.Items.Remove(name);
+                    }
+                    comboBoxPresets.Items.Add(name);
+                    comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Count - 1;
+                }
+            }
+            else if (index > 1)
+            {
+                LoadPreset(comboBoxPresets.SelectedItem.ToString());
+            }
+        }
+
+        public void AnalogControlChangedManually()
+        {
+            if (comboBoxPresets.SelectedIndex != 0)
+            {
+                comboBoxPresets.SelectedIndex = 0;
+            }
+        }
+
+        private void SavePreset(string name)
+        {
+            var preset = new Dictionary<string, int>();
+            foreach (var control in panelForControls.Controls)
+            {
+                var analogControl = control as AnalogControl;
+                if (analogControl != null)
+                {
+                    preset.Add(analogControl.Pin.Name, analogControl.PresetValue);
+                }
+            }
+            if (m_savedPresets.ContainsKey(name))
+            {
+                m_savedPresets.Remove(name);
+            }
+            m_savedPresets.Add(name, preset);
+        }
+
+        private void LoadPreset(string name)
+        {
+            Dictionary<string, int> preset;
+            if (m_savedPresets.TryGetValue(name, out preset))
+            {
+                foreach (var control in panelForControls.Controls)
+                {
+                    var analogControl = control as AnalogControl;
+                    if (analogControl != null)
+                    {
+                        int value;
+                        if (preset.TryGetValue(analogControl.Pin.Name, out value))
+                        {
+                            analogControl.PresetValue = value;
+                        }
+                    }
+                }
             }
         }
     }

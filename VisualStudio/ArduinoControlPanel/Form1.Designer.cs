@@ -33,6 +33,9 @@
             this.labelCOM = new System.Windows.Forms.Label();
             this.comboBoxCOM = new System.Windows.Forms.ComboBox();
             this.timerSerialAvailability = new System.Windows.Forms.Timer(this.components);
+            this.labelPresets = new System.Windows.Forms.Label();
+            this.comboBoxPresets = new System.Windows.Forms.ComboBox();
+            this.buttonSpeech = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // panelForControls
@@ -71,11 +74,45 @@
             this.timerSerialAvailability.Interval = 1000;
             this.timerSerialAvailability.Tick += new System.EventHandler(this.timerSerialAvailability_Tick);
             // 
+            // labelPresets
+            // 
+            this.labelPresets.AutoSize = true;
+            this.labelPresets.Location = new System.Drawing.Point(374, 12);
+            this.labelPresets.Name = "labelPresets";
+            this.labelPresets.Size = new System.Drawing.Size(40, 13);
+            this.labelPresets.TabIndex = 3;
+            this.labelPresets.Text = "Preset:";
+            // 
+            // comboBoxPresets
+            // 
+            this.comboBoxPresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPresets.FormattingEnabled = true;
+            this.comboBoxPresets.Items.AddRange(new object[] {
+            "Custom",
+            "New..."});
+            this.comboBoxPresets.Location = new System.Drawing.Point(420, 9);
+            this.comboBoxPresets.Name = "comboBoxPresets";
+            this.comboBoxPresets.Size = new System.Drawing.Size(170, 21);
+            this.comboBoxPresets.TabIndex = 4;
+            this.comboBoxPresets.SelectedIndexChanged += new System.EventHandler(this.comboBoxPresets_SelectedIndexChanged);
+            // 
+            // buttonSpeech
+            // 
+            this.buttonSpeech.Location = new System.Drawing.Point(596, 7);
+            this.buttonSpeech.Name = "buttonSpeech";
+            this.buttonSpeech.Size = new System.Drawing.Size(52, 23);
+            this.buttonSpeech.TabIndex = 5;
+            this.buttonSpeech.Text = "mic";
+            this.buttonSpeech.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(660, 292);
+            this.Controls.Add(this.buttonSpeech);
+            this.Controls.Add(this.comboBoxPresets);
+            this.Controls.Add(this.labelPresets);
             this.Controls.Add(this.comboBoxCOM);
             this.Controls.Add(this.labelCOM);
             this.Controls.Add(this.panelForControls);
@@ -93,6 +130,9 @@
         private System.Windows.Forms.Label labelCOM;
         private System.Windows.Forms.ComboBox comboBoxCOM;
         private System.Windows.Forms.Timer timerSerialAvailability;
+        private System.Windows.Forms.Label labelPresets;
+        private System.Windows.Forms.ComboBox comboBoxPresets;
+        private System.Windows.Forms.Button buttonSpeech;
     }
 }
 

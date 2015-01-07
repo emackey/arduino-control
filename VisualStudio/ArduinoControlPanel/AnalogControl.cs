@@ -14,9 +14,11 @@ namespace ArduinoControlPanel
     public partial class AnalogControl : UserControl
     {
         public ArduinoPin Pin { get; private set; }
+        private Form1 m_parent;
 
-        public AnalogControl(ArduinoPin pin)
+        public AnalogControl(ArduinoPin pin, Form1 parent)
         {
+            m_parent = parent;
             Pin = pin;
             InitializeComponent();
             groupBoxAnalog.Text = pin.Name;
@@ -31,6 +33,7 @@ namespace ArduinoControlPanel
             {
                 Pin.Value = value;
                 textBoxAnalog.Text = value.ToString();
+                m_parent.AnalogControlChangedManually();
             }
         }
 
@@ -43,6 +46,21 @@ namespace ArduinoControlPanel
                 {
                     Pin.Value = value;
                     trackBarAnalog.Value = value;
+                    m_parent.AnalogControlChangedManually();
+                }
+            }
+        }
+
+        public int PresetValue
+        {
+            get { return Pin.Value; }
+            set
+            {
+                if ((Pin.Value != value) && (value >= 0) && (value <= 255))
+                {
+                    Pin.Value = value;
+                    trackBarAnalog.Value = value;
+                    textBoxAnalog.Text = value.ToString();
                 }
             }
         }
