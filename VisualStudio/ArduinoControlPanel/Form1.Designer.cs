@@ -98,12 +98,14 @@
             // 
             // buttonSpeech
             // 
+            this.buttonSpeech.Enabled = false;
             this.buttonSpeech.Location = new System.Drawing.Point(596, 7);
             this.buttonSpeech.Name = "buttonSpeech";
             this.buttonSpeech.Size = new System.Drawing.Size(52, 23);
             this.buttonSpeech.TabIndex = 5;
             this.buttonSpeech.Text = "mic";
             this.buttonSpeech.UseVisualStyleBackColor = true;
+            this.buttonSpeech.Click += new System.EventHandler(this.buttonSpeech_Click);
             // 
             // Form1
             // 

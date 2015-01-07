@@ -20,6 +20,7 @@ namespace ArduinoControlPanel
         private bool m_isUpdatingAvailability;
         private ArduinoPort m_port;
         private Dictionary<string, Dictionary<string, int>> m_savedPresets;
+        private NamesFromSpeech m_namesFromSpeech = null;
 
         private delegate void ArduinoPinsDelegate();
 
@@ -202,6 +203,7 @@ namespace ArduinoControlPanel
                     }
                     comboBoxPresets.Items.Add(name);
                     comboBoxPresets.SelectedIndex = comboBoxPresets.Items.Count - 1;
+                    buttonSpeech.Enabled = true;
                 }
             }
             else if (index > 1)
@@ -234,6 +236,10 @@ namespace ArduinoControlPanel
                 m_savedPresets.Remove(name);
             }
             m_savedPresets.Add(name, preset);
+            if (m_namesFromSpeech != null)
+            {
+                m_namesFromSpeech.AddName(name);
+            }
         }
 
         private void LoadPreset(string name)
@@ -253,6 +259,24 @@ namespace ArduinoControlPanel
                         }
                     }
                 }
+            }
+        }
+
+        public void onSpeech(string name)
+        {
+            int pos = comboBoxPresets.Items.IndexOf(name);
+            if (pos > 1)
+            {
+                comboBoxPresets.SelectedIndex = pos;
+            }
+        }
+
+        private void buttonSpeech_Click(object sender, EventArgs e)
+        {
+            if (m_namesFromSpeech == null)
+            {
+                m_namesFromSpeech = new NamesFromSpeech(this, m_savedPresets.Select(p => p.Key).ToList());
+                buttonSpeech.Visible = false;
             }
         }
     }
