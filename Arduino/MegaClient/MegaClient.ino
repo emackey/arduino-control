@@ -15,11 +15,20 @@ struct pin {
 pin analogOuts[] = {
   {  2, 0, 0, "Strip 1 Red"},
   {  3, 0, 0, "Strip 1 Green"},
-  {  4, 0, 0, "Strip 1 Blue"},
+  {  4, 128, 128, "Strip 1 Blue"},
   {  5, 0, 0, "Strip 2 Red"},
   {  6, 0, 0, "Strip 2 Green"},
-//  {  7, 0, 0, "Strip 2 Blue"},
-  { 13, 255, 255, "Onboard LED"}
+  {  7, 128, 128, "Strip 2 Blue"},
+  {  8, 0, 0, "Strip 3 Red"},
+  {  9, 0, 0, "Strip 3 Green"},
+  {  10, 128, 128, "Strip 3 Blue"},
+  {  11, 0, 0, "Strip 4 Red"},
+  {  12, 0, 0, "Strip 4 Green"},
+  {  13, 128, 128, "Strip 4 Blue"},
+  {  43, 0, 0, "Strip 5 Red"},
+  {  44, 0, 0, "Strip 5 Green"},
+  {  45, 128, 128, "Strip 5 Blue"}
+  //{ 13, 255, 255, "Onboard LED"}
 };
 
 // List of digital (boolean) outputs with names, escaped as above.
