@@ -14,11 +14,19 @@ namespace ArduinoSerialServer
         // Thread signal.
         public static ManualResetEvent allDone = new ManualResetEvent(false);
         private static ServerForm _parent;
+        private static int _port;
+        private static Thread _thread;
 
         public static void StartListening(ServerForm parent, int port)
         {
             _parent = parent;
+            _port = port;
+            _thread = new Thread(LaunchServer);
+            _thread.Start();
+        }
 
+        private static void LaunchServer()
+        {
             // Data buffer for incoming data.
             byte[] bytes = new Byte[1024];
 
@@ -34,8 +42,8 @@ namespace ArduinoSerialServer
 #else
             IPAddress ipAddress = new IPAddress(new byte[] { 127, 0, 0, 1 });
 #endif
-            _parent.AddMessage("Endpoint: " + ipAddress.ToString() + ":" + port.ToString());
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
+            _parent.AddMessage("Endpoint: " + ipAddress.ToString() + ":" + _port.ToString());
+            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, _port);
 
             // Create a TCP/IP socket.
             Socket listener = new Socket(AddressFamily.InterNetwork,
@@ -118,6 +126,7 @@ namespace ArduinoSerialServer
 
                     // Echo the data back to the client.
                     Send(handler, content);
+                    state.sb.Clear();
                 }
 
                 // Get more data.
@@ -147,8 +156,8 @@ namespace ArduinoSerialServer
                 int bytesSent = handler.EndSend(ar);
                 _parent.AddMessage("Sent " + bytesSent.ToString() + " bytes to client.");
 
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();
+                //handler.Shutdown(SocketShutdown.Both);
+                //handler.Close();
 
             }
             catch (Exception e)
@@ -168,6 +177,11 @@ namespace ArduinoSerialServer
             public byte[] buffer = new byte[BufferSize];
             // Received data string.
             public StringBuilder sb = new StringBuilder();
+        }
+
+        public static void Shutdown()
+        {
+            _thread.Abort();
         }
     }
 }

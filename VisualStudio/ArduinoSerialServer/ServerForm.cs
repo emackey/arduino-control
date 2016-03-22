@@ -15,7 +15,7 @@ namespace ArduinoSerialServer
         public ServerForm()
         {
             InitializeComponent();
-            //SocketServer.StartListening(this, 8901);
+            SocketServer.StartListening(this, 8901);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -23,9 +23,21 @@ namespace ArduinoSerialServer
             Close();
         }
 
-        public void AddMessage(string message)
+        private void AddMessageInternal(string message)
         {
             textBoxLog.AppendText(message + "\r\n");
+        }
+        private delegate void AddMessageDelegate(string message);
+
+        public void AddMessage(string message)
+        {
+            this.BeginInvoke(new AddMessageDelegate(AddMessageInternal), new object[] { message });
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            SocketServer.Shutdown();
+            base.OnClosing(e);
         }
     }
 }
