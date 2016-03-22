@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -14,19 +15,26 @@ namespace ArduinoSerialServer
         // Thread signal.
         public static ManualResetEvent allDone = new ManualResetEvent(false);
         private static ServerForm _parent;
-        private static int _port;
+        private static int _portNumber;
         private static Thread _thread;
+        private static SerialPort _serialPort;
+        private static Socket _mainConnectionHandler;
 
-        public static void StartListening(ServerForm parent, int port)
+        public static void StartListening(ServerForm parent, int portNumber)
         {
             _parent = parent;
-            _port = port;
+            _mainConnectionHandler = null;
+            _portNumber = portNumber;
             _thread = new Thread(LaunchServer);
             _thread.Start();
         }
 
         private static void LaunchServer()
         {
+            _serialPort = new SerialPort("COM9", 9600);
+            _serialPort.Open();
+            _serialPort.DtrEnable = true;
+
             // Data buffer for incoming data.
             byte[] bytes = new Byte[1024];
 
@@ -42,8 +50,8 @@ namespace ArduinoSerialServer
 #else
             IPAddress ipAddress = new IPAddress(new byte[] { 127, 0, 0, 1 });
 #endif
-            _parent.AddMessage("Endpoint: " + ipAddress.ToString() + ":" + _port.ToString());
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, _port);
+            _parent.AddMessage("Endpoint: " + ipAddress.ToString() + ":" + _portNumber.ToString());
+            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, _portNumber);
 
             // Create a TCP/IP socket.
             Socket listener = new Socket(AddressFamily.InterNetwork,
@@ -76,7 +84,22 @@ namespace ArduinoSerialServer
                 _parent.AddMessage("ERROR: " + e.ToString());
             }
 
+            _serialPort.DataReceived += serialPort_DataReceived;
+
             _parent.AddMessage("End of StartListening()...");
+        }
+
+        static void serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            // CAUTION: This event is fired on a different thread!
+            string data = _serialPort.ReadExisting();
+            _parent.AddMessage("Received: " + data);
+
+            // Send data to network client.
+            if (_mainConnectionHandler != null)
+            {
+                Send(_mainConnectionHandler, data);
+            }
         }
 
         public static void AcceptCallback(IAsyncResult ar)
@@ -87,6 +110,11 @@ namespace ArduinoSerialServer
             // Get the socket that handles the client request.
             Socket listener = (Socket)ar.AsyncState;
             Socket handler = listener.EndAccept(ar);
+            if ((_mainConnectionHandler != null) && (_mainConnectionHandler != handler))
+            {
+                _mainConnectionHandler.Close();
+            }
+            _mainConnectionHandler = handler;
 
             // Create the state object.
             StateObject state = new StateObject();
@@ -116,16 +144,21 @@ namespace ArduinoSerialServer
                 // Check for end-of-file tag. If it is not there, read 
                 // more data.
                 content = state.sb.ToString();
-                if (content.IndexOf(";") > -1)
+                int startChar = content.IndexOf('@');
+                int stopChar = content.IndexOf(';');
+                if ((startChar > -1) && (stopChar > startChar))
                 {
+                    content = content.Substring(startChar, stopChar - startChar + 1);
                     // All the data has been read from the 
                     // client. Display it on the log.
                     //_parent.AddMessage("Read " + content.Length.ToString() + " bytes from socket");
                     //_parent.AddMessage(" Data: " + content);
-                    _parent.AddMessage(content);
+                    _parent.AddMessage("Sent: " + content);
 
                     // Echo the data back to the client.
-                    Send(handler, content);
+                    //Send(handler, content);
+
+                    _serialPort.Write(content);
                     state.sb.Clear();
                 }
 
@@ -154,7 +187,7 @@ namespace ArduinoSerialServer
 
                 // Complete sending the data to the remote device.
                 int bytesSent = handler.EndSend(ar);
-                _parent.AddMessage("Sent " + bytesSent.ToString() + " bytes to client.");
+                //_parent.AddMessage("Sent " + bytesSent.ToString() + " bytes to client.");
 
                 //handler.Shutdown(SocketShutdown.Both);
                 //handler.Close();
