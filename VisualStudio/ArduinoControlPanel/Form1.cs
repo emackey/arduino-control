@@ -16,6 +16,7 @@ namespace ArduinoControlPanel
     public partial class Form1 : Form
     {
         const string NO_CONNECT = "Disconnected";
+        const int BaudRate = 19200;  // default is 9600.
 
         private bool m_isUpdatingAvailability;
         private ArduinoPort m_port;
@@ -54,7 +55,7 @@ namespace ArduinoControlPanel
 
             if (!portName.Equals(NO_CONNECT))
             {
-                m_port = new ArduinoPort(portName, 9600);
+                m_port = new ArduinoPort(portName, BaudRate);
                 m_port.ArduinoPinsAvailable += OnArduinoPinsAvailable;
             }
         }

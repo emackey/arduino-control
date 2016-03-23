@@ -1,5 +1,7 @@
 // First simple ArduinoControl client, by Ed Mackey, 30 Nov 2014.
 
+int baudRate = 19200; // default is 9600.
+
 struct pin {
   int number;        // The Arduino pin number.  You can use "A0" etc for analog inputs.
   int defaultValue;  // For output pins, the initial value at startup and after the @RESET; command.
@@ -28,8 +30,7 @@ pin digitalOuts[] = {
   {  4, 1, 1, "Digital 4"},
   {  7, 1, 1, "Digital 7"},
   {  8, 1, 1, "Digital 8"},
-  { 12, 1, 1, "Digital 12"},
-  { 13, 1, 1, "Digital 13"}
+  { 13, 1, 1, "Onboard LED"}
 };
 
 // List of analog inputs.  Default values are ignored.
@@ -42,10 +43,17 @@ pin analogIns[] = {
   { A5, 0, 0, "Input A5"}
 };
 
+// List of digital (boolean) inputs with names, escaped as above.
+// Default values are ignored.
+pin digitalIns[] = {
+  { 12, 1, 1, "Digital Input 12"}
+};
+
 // This calculates the number of pins.
 int numAnalogOuts = sizeof(analogOuts) / sizeof(pin);
 int numDigitalOuts = sizeof(digitalOuts) / sizeof(pin);
 int numAnalogIns = sizeof(analogIns) / sizeof(pin);
+int numDigitalIns = sizeof(digitalIns) / sizeof(pin);
 
 void resetPinsToDefaults() {
   int i, pin;
@@ -65,11 +73,15 @@ void resetPinsToDefaults() {
     pin = analogIns[i].number;
     pinMode(pin, INPUT);
   }
+  for (i = 0; i < numDigitalIns; ++i) {
+    pin = digitalIns[i].number;
+    pinMode(pin, INPUT_PULLUP);
+  }
 }
 
 void setup() {
   resetPinsToDefaults();
-  Serial.begin(9600);
+  Serial.begin(baudRate);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for Leonardo only
     // Note this really does hang until you open a serial monitor or other connection.
@@ -107,6 +119,15 @@ void listPins() {
     Serial.print(analogIns[i].name);
     Serial.print("\"");
   }
+  for (i = 0; i < numDigitalIns; ++i) {
+    Serial.print("|DI");
+    Serial.print(digitalIns[i].number, DEC);
+    Serial.print(":");
+    Serial.print(digitalRead(digitalIns[i].number), DEC);
+    Serial.print("\"");
+    Serial.print(digitalIns[i].name);
+    Serial.print("\"");
+  }
   Serial.println(";");
 }
 
@@ -119,28 +140,47 @@ void pollPins() {
     Serial.print(":");
     Serial.print(analogRead(analogIns[i].number), DEC);
   }
+  for (i = 0; i < numDigitalIns; ++i) {
+    Serial.print("|D");
+    Serial.print(digitalIns[i].number, DEC);
+    Serial.print(":");
+    Serial.print(digitalRead(digitalIns[i].number), DEC);
+  }
   Serial.println(";");
 }
 
 void requestReadFromPin(int pin) {
-  boolean allowed = false;
+  boolean isAnalog = false;
+  boolean isDigital = false;
   int i;
   for (i = 0; i < numAnalogIns; ++i) {
     if (pin == analogIns[i].number) {
-      allowed = true;
+      isAnalog = true;
+      break;
+    }
+  }
+  for (i = 0; i < numDigitalIns; ++i) {
+    if (pin == digitalIns[i].number) {
+      isDigital = true;
       break;
     }
   }
 
-  if (!allowed) {
-    Serial.print("@ERROR: No such analog input pin ");
-    Serial.print(pin, DEC);
-    Serial.println(";");
-  } else {
+  if (isAnalog) {
     Serial.print("@A");
     Serial.print(pin, DEC);
     Serial.print(":");
     Serial.print(analogRead(pin), DEC);
+    Serial.println(";");
+  } else if (isDigital) {
+    Serial.print("@D");
+    Serial.print(pin, DEC);
+    Serial.print(":");
+    Serial.print(digitalRead(pin), DEC);
+    Serial.println(";");
+  } else {
+    Serial.print("@ERROR: No such analog input pin ");
+    Serial.print(pin, DEC);
     Serial.println(";");
   }
 }
