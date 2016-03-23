@@ -52,6 +52,14 @@ Here's what `@POLL;` would respond to the same situation that produced the list 
 @POLL|A18:0|A19:1023;
 ```
 
+## Push updates
+
+Digital input pins will push their updates without polling, using `@PUSH`.
+
+```
+@PUSH|D12:0;
+```
+
 ## Additional responses
 
 `@OK;` - Write operation succeded
