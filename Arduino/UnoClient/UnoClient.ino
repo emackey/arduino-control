@@ -111,19 +111,21 @@ void listPins() {
     Serial.print("\"");
   }
   for (i = 0; i < numAnalogIns; ++i) {
+    analogIns[i].value = analogRead(analogIns[i].number);
     Serial.print("|AI");
     Serial.print(analogIns[i].number, DEC);
     Serial.print(":");
-    Serial.print(analogRead(analogIns[i].number), DEC);
+    Serial.print(analogIns[i].value, DEC);
     Serial.print("\"");
     Serial.print(analogIns[i].name);
     Serial.print("\"");
   }
   for (i = 0; i < numDigitalIns; ++i) {
+    digitalIns[i].value = digitalRead(digitalIns[i].number);
     Serial.print("|DI");
     Serial.print(digitalIns[i].number, DEC);
     Serial.print(":");
-    Serial.print(digitalRead(digitalIns[i].number), DEC);
+    Serial.print(digitalIns[i].value, DEC);
     Serial.print("\"");
     Serial.print(digitalIns[i].name);
     Serial.print("\"");
@@ -135,54 +137,83 @@ void pollPins() {
   Serial.print("@POLL");
   int i;
   for (i = 0; i < numAnalogIns; ++i) {
+    analogIns[i].value = analogRead(analogIns[i].number);
     Serial.print("|A");
     Serial.print(analogIns[i].number, DEC);
     Serial.print(":");
-    Serial.print(analogRead(analogIns[i].number), DEC);
+    Serial.print(analogIns[i].value, DEC);
   }
   for (i = 0; i < numDigitalIns; ++i) {
+    digitalIns[i].value = digitalRead(digitalIns[i].number);
     Serial.print("|D");
     Serial.print(digitalIns[i].number, DEC);
     Serial.print(":");
-    Serial.print(digitalRead(digitalIns[i].number), DEC);
+    Serial.print(digitalIns[i].value, DEC);
   }
   Serial.println(";");
 }
 
+int millisBetweenPushes = 16;
+int lastPushMillis = 0;
+
+void pushUpdates() {
+  int now = millis();
+  if ((now >= lastPushMillis) && (now < (lastPushMillis + millisBetweenPushes))) {
+    return;
+  }
+  lastPushMillis = now;
+  
+  int i;
+  int currentValue;
+  boolean isPushing = false;
+  for (i = 0; i < numDigitalIns; ++i) {
+    currentValue = digitalRead(digitalIns[i].number);
+    if (currentValue != digitalIns[i].value) {
+      digitalIns[i].value = currentValue;
+      if (!isPushing) {
+        isPushing = true;
+        Serial.print("@PUSH");
+      }
+      Serial.print("|D");
+      Serial.print(digitalIns[i].number, DEC);
+      Serial.print(":");
+      Serial.print(digitalIns[i].value, DEC);
+    }
+  }
+  
+  if (isPushing) {
+    Serial.println(";");
+  }
+}
+
 void requestReadFromPin(int pin) {
-  boolean isAnalog = false;
-  boolean isDigital = false;
   int i;
   for (i = 0; i < numAnalogIns; ++i) {
     if (pin == analogIns[i].number) {
-      isAnalog = true;
-      break;
+      analogIns[i].value = analogRead(pin);
+      Serial.print("@A");
+      Serial.print(pin, DEC);
+      Serial.print(":");
+      Serial.print(analogIns[i].value, DEC);
+      Serial.println(";");
+      return;
     }
   }
   for (i = 0; i < numDigitalIns; ++i) {
     if (pin == digitalIns[i].number) {
-      isDigital = true;
-      break;
+      digitalIns[i].value = digitalRead(pin);
+      Serial.print("@D");
+      Serial.print(pin, DEC);
+      Serial.print(":");
+      Serial.print(digitalIns[i].value, DEC);
+      Serial.println(";");
+      return;
     }
   }
 
-  if (isAnalog) {
-    Serial.print("@A");
-    Serial.print(pin, DEC);
-    Serial.print(":");
-    Serial.print(analogRead(pin), DEC);
-    Serial.println(";");
-  } else if (isDigital) {
-    Serial.print("@D");
-    Serial.print(pin, DEC);
-    Serial.print(":");
-    Serial.print(digitalRead(pin), DEC);
-    Serial.println(";");
-  } else {
-    Serial.print("@ERROR: No such analog input pin ");
-    Serial.print(pin, DEC);
-    Serial.println(";");
-  }
+  Serial.print("@ERROR: No such input pin ");
+  Serial.print(pin, DEC);
+  Serial.println(";");
 }
 
 void requestWriteToAnalogPin(int pin, int value) {
@@ -244,6 +275,7 @@ boolean incomingModeIsAnalog;
 boolean incomingOperationIsOutput;
 
 void loop() {
+  pushUpdates();
   if (Serial.available() > 0) {
     incomingByte = Serial.read();
 
