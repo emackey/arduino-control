@@ -15,6 +15,7 @@ namespace ArduinoSerialServer
     public partial class ServerForm : Form
     {
         const string NO_CONNECT = "Disconnected";
+        const int BaudRate = 19200;  // default is 9600.
 
         private SerialPort m_serialPort;
         private bool m_isUpdatingAvailability;
@@ -88,7 +89,7 @@ namespace ArduinoSerialServer
                 MessageBox.Show("Invalid network port number.");
                 return;
             }
-            m_serialPort = new SerialPort(portName, 9600);
+            m_serialPort = new SerialPort(portName, BaudRate);
             m_serialPort.DataReceived += SerialPort_DataReceived;
             m_serialPort.Open();
             m_serialPort.DtrEnable = true;
