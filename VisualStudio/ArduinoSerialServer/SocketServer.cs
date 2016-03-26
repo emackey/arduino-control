@@ -121,7 +121,17 @@ namespace ArduinoSerialServer
             Socket handler = state.workSocket;
 
             // Read data from the client socket. 
-            int bytesRead = handler.EndReceive(ar);
+            int bytesRead;
+            try
+            {
+                bytesRead = handler.EndReceive(ar);
+            }
+            catch (Exception ex)
+            {
+                _parent.AddMessage(ex.ToString());
+                _parent.AddMessage("Connection broken.");
+                return;
+            }
 
             if (bytesRead > 0)
             {
@@ -129,25 +139,34 @@ namespace ArduinoSerialServer
                 state.sb.Append(Encoding.ASCII.GetString(
                     state.buffer, 0, bytesRead));
 
-                // Check for end-of-file tag. If it is not there, read 
-                // more data.
-                content = state.sb.ToString();
-                int startChar = content.IndexOf('@');
-                int stopChar = content.IndexOf(';');
-                if ((startChar > -1) && (stopChar > startChar))
+                StringBuilder commands = new StringBuilder();
+
+                while (true)
                 {
-                    content = content.Substring(startChar, stopChar - startChar + 1);
-                    // All the data has been read from the 
-                    // client. Display it on the log.
-                    //_parent.AddMessage("Read " + content.Length.ToString() + " bytes from socket");
-                    //_parent.AddMessage(" Data: " + content);
-                    _parent.AddMessage("Sent: " + content);
+                    // Check for end-of-file tag. If it is not there, read 
+                    // more data.
+                    content = state.sb.ToString();
+                    int startChar = content.IndexOf('@');
+                    int stopChar = content.IndexOf(';');
+                    if ((startChar > -1) && (stopChar > startChar))
+                    {
+                        commands.Append(content.Substring(startChar, stopChar - startChar + 1));
+                        // All the data has been read from the 
+                        // client. Display it on the log.
+                        //_parent.AddMessage("Read " + content.Length.ToString() + " bytes from socket");
+                        //_parent.AddMessage(" Data: " + content);
+                        state.sb.Clear();
+                        state.sb.Append(content.Substring(stopChar + 1));
+                    }
+                    else
+                        break;
+                }
 
-                    // Echo the data back to the client.
-                    //Send(handler, content);
-
-                    _parent.SendSerialData(content);
-                    state.sb.Clear();
+                string commandString = commands.ToString();
+                if (!string.IsNullOrEmpty(commandString))
+                {
+                    _parent.AddMessage("Sent: " + commandString);
+                    _parent.SendSerialData(commandString);
                 }
 
                 // Get more data.
